@@ -15,14 +15,22 @@ import { Driver, MarkerData } from "@/types/type";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
-const region = {
-  latitude: 49.97829653691428,
-  longitude: 18.94047034029246,
-  latitudeDelta: 2,
-  longitudeDelta: 2,
-};
-
 const Map = () => {
+  const {
+    userLongitude,
+    userLatitude,
+    destinationLatitude,
+    destinationLongitude,
+  } = useLocationStore();
+  const { selectedDriver, setDrivers } = useDriverStore();
+  
+  const region = calculateRegion({
+    userLatitude,
+    userLongitude,
+    destinationLatitude,
+    destinationLongitude,
+  });
+
   return (
     <MapView
       style={StyleSheet.absoluteFill}
@@ -30,7 +38,6 @@ const Map = () => {
       className="w-full h-full rounded-2xl"
       tintColor="black"
       mapType="standard"
-      initialRegion={region}
       showsPointsOfInterest={false}
       showsUserLocation={true}
       userInterfaceStyle="light"

@@ -1,5 +1,6 @@
 import GoogleTextInput from "@/components/GoogleTextInput";
 import Map from "@/components/Map";
+import * as Location from "expo-location";
 import RideCard from "@/components/RideCard";
 import { icons, zdjecia } from "@/constants";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
@@ -14,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocationStore } from "@/store";
 const ciekaweMiejsca = [
   {
     miejsce_id: "1",
@@ -41,6 +43,31 @@ const Home = () => {
   const loading = true;
   const handleSignOut = () => {};
   const handleDestinationPress = () => {};
+  const { setUserLocation, setDestinationLocation } = useLocationStore();
+  const [hasPermission, setHasPermission] = useState<boolean>(false);
+  
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setHasPermission(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords?.latitude!,
+        longitude: location.coords?.longitude!,
+      });
+
+      setUserLocation({
+        latitude: location.coords?.latitude,
+        longitude: location.coords?.longitude,
+        address: `${address[0].name}, ${address[0].region}`,
+      });
+    })();
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
