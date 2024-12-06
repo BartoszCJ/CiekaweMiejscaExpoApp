@@ -1,5 +1,5 @@
 import GoogleTextInput from "@/components/GoogleTextInput";
-import Map from "@/components/Map";
+import Mapa from "@/components/Map";
 import * as Location from "expo-location";
 import RideCard from "@/components/RideCard";
 import { icons, zdjecia } from "@/constants";
@@ -16,37 +16,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocationStore } from "@/store";
-const ciekaweMiejsca = [
-  {
-    miejsce_id: "1",
-    address: "Brama Wybrańców 1, Pszczyna",
-    latitude: "49.97829653691428,",
-    longitude: "18.94047034029246",
-    user_id: "1",
-    dodano: "2024-08-12",
-    nazwa: "Zamek Pszczyński",
-    kategoria: "Historia",
-    opis: "Piękny zamek oraz muzeum",
-    ocena: "5",
-    image_url:
-      "https://media.istockphoto.com/id/92239299/pl/zdj%C4%99cie/zamek-pszczyna-polska.jpg?s=2048x2048&w=is&k=20&c=I0LyRVys7Htz8PzlDRPlu9rz1xLOr20Mntw1CwnXtbU=",
-    kontakt: {
-      telefon: "+48 123 456 789",
-      email: "kontakt@zamekpszczyna.pl",
-      strona_www: "https://www.zamekpszczyna.pl",
-    },
-  },
-];
+import { useFetch } from "@/lib/fetch";
+import { Miejsce } from "@/types/type";
 
 const Home = () => {
   const { user } = useUser();
-  const loading = true;
   const handleSignOut = () => {};
   const handleDestinationPress = () => {};
   const { setUserLocation, setDestinationLocation } = useLocationStore();
   const [hasPermission, setHasPermission] = useState<boolean>(false);
-  
+
+  const {
+    data: ciekaweMiejsca,
+    loading,
+    error,
+  } = useFetch<Miejsce[]>("/(api)/miejsce/miejsce");
+
   useEffect(() => {
+    let subscription: Location.LocationSubscription | null = null;
+
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -54,25 +42,38 @@ const Home = () => {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000, // Update every 5 seconds
+          distanceInterval: 10, // Update when user moves 10 meters
+        },
+        async (location) => {
+          const address = await Location.reverseGeocodeAsync({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
 
-      const address = await Location.reverseGeocodeAsync({
-        latitude: location.coords?.latitude!,
-        longitude: location.coords?.longitude!,
-      });
-
-      setUserLocation({
-        latitude: location.coords?.latitude,
-        longitude: location.coords?.longitude,
-        address: `${address[0].name}, ${address[0].region}`,
-      });
+          setUserLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            address: `${address[0]?.name || "Unknown"}, ${address[0]?.region || "Unknown"}`,
+          });
+        }
+      );
     })();
-  }, []);
 
+    return () => {
+      if (subscription) {
+        subscription.remove();
+      }
+    };
+  }, []);
+  
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
       <FlatList
-        data={ciekaweMiejsca.slice(0, 5)} // Przekazanie płaskiej tablicy
+        data={ciekaweMiejsca?.slice(0, 5)} // Przekazanie płaskiej tablicy
         keyExtractor={(item) => item.miejsce_id?.toString() || "default_key"}
         // Ustawienie unikalnego klucza
         renderItem={({ item }) => <RideCard miejsce={item} />}
@@ -122,7 +123,7 @@ const Home = () => {
                 Twoja lokalizacja
               </Text>
               <View className="flex flex-row items-center bg-transparent h-[300px]">
-                <Map />
+                <Mapa />
               </View>
             </>
 

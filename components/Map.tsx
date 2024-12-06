@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View, StyleSheet } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
-import MapViewDirections from "react-native-maps-directions";
 
 import { icons } from "@/constants";
 import { useFetch } from "@/lib/fetch";
@@ -15,7 +14,7 @@ import { Driver, MarkerData } from "@/types/type";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
-const Map = () => {
+const Mapa = () => {
   const {
     userLongitude,
     userLatitude,
@@ -23,7 +22,7 @@ const Map = () => {
     destinationLongitude,
   } = useLocationStore();
   const { selectedDriver, setDrivers } = useDriverStore();
-  
+
   const region = calculateRegion({
     userLatitude,
     userLongitude,
@@ -45,4 +44,4 @@ const Map = () => {
   );
 };
 
-export default Map;
+export default Mapa;

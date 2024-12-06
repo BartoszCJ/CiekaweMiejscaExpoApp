@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
@@ -6,47 +6,11 @@ import {
   Text,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { icons } from "@/constants";
-import { GoogleInputProps } from "@/types/type";
-
-const ciekaweMiejsca = [
-  {
-    miejsce_id: "1",
-    address: "Brama Wybrańców 1, Pszczyna",
-    latitude: "49.97829653691428",
-    longitude: "18.94047034029246",
-    user_id: "1",
-    dodano: "2024-08-12",
-    nazwa: "Zamek Pszczyński",
-    kategoria: "Historia",
-    opis: "Piękny zamek oraz muzeum",
-    ocena: "5",
-    image_url:
-      "https://media.istockphoto.com/id/92239299/pl/zdj%C4%99cie/zamek-pszczyna-polska.jpg?s=2048x2048&w=is&k=20&c=I0LyRVys7Htz8PzlDRPlu9rz1xLOr20Mntw1CwnXtbU=",
-    kontakt: {
-      telefon: "+48 123 456 789",
-      email: "kontakt@zamekpszczyna.pl",
-      strona_www: "https://www.zamekpszczyna.pl",
-    },
-  },
-  {
-    miejsce_id: "2",
-    address: "Rynek Główny, Kraków",
-    latitude: 50.0619474,
-    longitude: 19.9368564,
-    nazwa: "Rynek Główny",
-    opis: "Największy rynek średniowieczny w Europie",
-    ocena: "5",
-    image_url:
-      "https://upload.wikimedia.org/wikipedia/commons/1/10/Krakow_-_Rynek_Glowny.jpg",
-    kontakt: {
-      telefon: "+48 123 456 789",
-      email: "kontakt@zamekpszczyna.pl",
-      strona_www: "https://www.zamekpszczyna.pl",
-    },
-  },
-];
+import { GoogleInputProps, Miejsce } from "@/types/type";
+import { useFetch } from "@/lib/fetch";
 
 const GoogleTextInput = ({
   icon,
@@ -55,45 +19,68 @@ const GoogleTextInput = ({
   handlePress,
 }: GoogleInputProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredPlaces, setFilteredPlaces] = useState(ciekaweMiejsca);
+  const [filteredPlaces, setFilteredPlaces] = useState<Miejsce[]>([]);
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    const filtered = ciekaweMiejsca.filter(
-      (place) =>
-        place.nazwa.toLowerCase().includes(query.toLowerCase()) ||
-        place.opis.toLowerCase().includes(query.toLowerCase()) ||
-        place.address.toLowerCase().includes(query.toLowerCase())
+  const { data: ciekaweMiejsca, loading, error } = useFetch<Miejsce[]>(
+    "/(api)/miejsce/miejsce"
+  );
+
+  // Update filtered places when search query or fetched data changes
+  useEffect(() => {
+    if (ciekaweMiejsca) {
+      const filtered = ciekaweMiejsca.filter(
+        (place) =>
+          place.nazwa.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          place.opis.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          place.address.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredPlaces(filtered);
+    }
+  }, [searchQuery, ciekaweMiejsca]);
+
+  if (loading) {
+    return (
+      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
     );
-    setFilteredPlaces(filtered);
-  };
+  }
+
+  if (error) {
+    return (
+      <View style={{ padding: 20, alignItems: "center" }}>
+        <Text style={{ color: "red", fontSize: 16 }}>
+          Failed to load places. Please try again later.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View
-      className={`flex flex-col ${containerStyle}`}
       style={{
         backgroundColor: textInputBackgroundColor || "white",
         borderRadius: 20,
+        ...containerStyle,
       }}
     >
       {/* Search Input */}
-      <View className="flex flex-row items-center p-4">
+      <View style={{ flexDirection: "row", alignItems: "center", padding: 10 }}>
         <Image
           source={icon || icons.search}
-          className="w-6 h-6"
+          style={{ width: 24, height: 24, marginRight: 10 }}
           resizeMode="contain"
-          style={{ marginRight: 10 }}
         />
         <TextInput
           value={searchQuery}
-          onChangeText={handleSearch}
+          onChangeText={setSearchQuery}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="Search for a place"
           placeholderTextColor="gray"
-          className="flex-1 text-base"
           style={{
+            flex: 1,
             fontSize: 16,
             color: "#000",
             padding: 5,
@@ -101,15 +88,15 @@ const GoogleTextInput = ({
         />
       </View>
 
-      {/* Conditionally Rendered Filtered Results */}
+      {/* Conditionally Render Filtered Results */}
       {isFocused && (
         <FlatList
           data={filteredPlaces}
-          keyExtractor={(item) => item.miejsce_id}
+          keyExtractor={(item) => item.miejsce_id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => {
-                setIsFocused(false); // Hide the list when an item is selected
+                setIsFocused(false); // Hide list on selection
                 handlePress({
                   latitude: parseFloat(item.latitude),
                   longitude: parseFloat(item.longitude),
@@ -137,12 +124,14 @@ const GoogleTextInput = ({
                 <Text style={{ fontWeight: "bold", fontSize: 16 }}>
                   {item.nazwa}
                 </Text>
-                <Text style={{ fontSize: 12, color: "#666" }}>{item.opis}</Text>
+                <Text style={{ fontSize: 12, color: "#666" }}>
+                  {item.opis}
+                </Text>
               </View>
             </TouchableOpacity>
           )}
           ListEmptyComponent={() => (
-            <Text className="text-center py-4 text-gray-500">
+            <Text style={{ textAlign: "center", padding: 20, color: "#666" }}>
               No results found
             </Text>
           )}
