@@ -3,8 +3,9 @@ import Mapa from "@/components/Mapa";
 import * as Location from "expo-location";
 import MiejsceCard from "@/components/MiejsceCard";
 import { icons, zdjecia } from "@/constants";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@clerk/clerk-expo";
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocationStore, useMiejsceStore } from "@/store";
 import { StyleSheet } from "react-native";
+import { router } from "expo-router";
 
 const Home = () => {
   const { user } = useUser();
@@ -24,6 +26,7 @@ const Home = () => {
   const { setUserLocation } = useLocationStore();
   const [hasPermission, setHasPermission] = useState(false);
   const mapRef = useRef<MapaRef>(null);
+  const { signOut } = useAuth();
 
   useEffect(() => {
     if (!ciekaweMiejsca) {
@@ -53,7 +56,7 @@ const Home = () => {
 
         subscription = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.Balanced,
+            accuracy: Location.Accuracy.High,
             timeInterval: 1000,
             distanceInterval: 50,
           },
@@ -77,7 +80,7 @@ const Home = () => {
         console.error("Error in location tracking:", error);
         Alert.alert("Error", "Unable to fetch location. Please try again.");
       }
-    };
+    };   
 
     startLocationTracking();
 
@@ -110,6 +113,12 @@ const Home = () => {
       mapRef.current.zoomToPlace(coordinates.latitude, coordinates.longitude);
     }
   };
+
+  const handleSignOut = () => {
+    signOut();
+    router.replace("/(auth)/welcome");
+  };
+
   const styles = StyleSheet.create({
     containerStyle: {
       backgroundColor: "white",
@@ -117,7 +126,7 @@ const Home = () => {
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.2,
       shadowRadius: 1.41,
-      elevation: 2, // For Android shadow
+      elevation: 2,
     },
   });
   return (
@@ -152,7 +161,7 @@ const Home = () => {
                   alt="Brak rides"
                   resizeMode="contain"
                 />
-                <Text className="text-sm">Brak rides</Text>
+                <Text className="text-sm">Brak miejsc</Text>
               </>
             ) : (
               <ActivityIndicator size="small" color="#000" />
@@ -168,7 +177,7 @@ const Home = () => {
                   user?.emailAddresses[0]?.emailAddress.split("@")[0]}
               </Text>
               <TouchableOpacity
-                onPress={() => {}}
+                onPress={handleSignOut}
                 className="justify-center items-center w-10 h-10 rounded-full bg-white"
               >
                 <Image source={icons.out} className="w-4 h-4" />
