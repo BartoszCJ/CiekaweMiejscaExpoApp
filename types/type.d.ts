@@ -6,19 +6,25 @@ interface Kontakt {
   strona_www: string;
 }
 
+declare global {
+  interface MapaRef {
+    zoomToPlace: (latitude: number, longitude: number) => void;
+  }
+}
+
 interface Miejsce {
-  miejsce_id: string; 
-  address: string; 
-  latitude: string; 
-  longitude: string; 
-  user_id: string; 
-  dodano: string; 
-  nazwa: string; 
+  miejsce_id: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  user_id: string;
+  dodano: string;
+  nazwa: string;
   kategoria: string;
-  opis: string; 
-  ocena: string; 
-  image_url: string; 
-  kontakt: Kontakt; 
+  opis: string;
+  ocena: string;
+  image_url: string;
+  kontakt: Kontakt;
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {
@@ -32,12 +38,13 @@ declare interface ButtonProps extends TouchableOpacityProps {
 
 declare interface GoogleInputProps {
   icon?: string;
-  containerStyle?: string;
+  containerStyle?: object; 
   textInputBackgroundColor?: string;
+  ciekaweMiejsca?: Miejsce[]; 
+  error?: Error | null; // Add this prop to the type definition
   handlePress: ({
     latitude,
     longitude,
-
   }: {
     latitude: number;
     longitude: number;
@@ -75,4 +82,3 @@ declare interface LocationStore {
     longitude: number;
   }) => void;
 }
-

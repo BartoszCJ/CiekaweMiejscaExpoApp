@@ -13,7 +13,7 @@ import { useLocationStore, useMiejsceStore } from "@/store";
 
 const GoogleTextInput = ({
   icon,
-  containerStyle,
+  containerStyle = {}, 
   textInputBackgroundColor,
   handlePress,
 }: GoogleInputProps) => {
@@ -26,15 +26,13 @@ const GoogleTextInput = ({
     error,
     fetchMiejsca,
   } = useMiejsceStore();
-  // Fetch places if not already loaded
+
   useEffect(() => {
     if (!ciekaweMiejsca) {
       fetchMiejsca();
     }
   }, [ciekaweMiejsca, fetchMiejsca]);
 
-
-  // Update filtered places when search query or fetched data changes
   useEffect(() => {
     if (ciekaweMiejsca) {
       const filtered = ciekaweMiejsca.filter(
@@ -47,18 +45,15 @@ const GoogleTextInput = ({
     }
   }, [searchQuery, ciekaweMiejsca]);
 
-
-
   if (error) {
     return (
       <View style={{ padding: 20, alignItems: "center" }}>
         <Text style={{ color: "red", fontSize: 16 }}>
-          Failed to load places. Please try again later.
+          Brak miejsc do wyszukania.
         </Text>
       </View>
     );
   }
-
 
   return (
     <View
@@ -68,7 +63,6 @@ const GoogleTextInput = ({
         ...containerStyle,
       }}
     >
-      {/* Search Input */}
       <View style={{ flexDirection: "row", alignItems: "center", padding: 10 }}>
         <Image
           source={icon || icons.search}
@@ -80,7 +74,7 @@ const GoogleTextInput = ({
           onChangeText={setSearchQuery}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="Search for a place"
+          placeholder="Wyszukaj miejsce"
           placeholderTextColor="gray"
           style={{
             flex: 1,
@@ -91,19 +85,18 @@ const GoogleTextInput = ({
         />
       </View>
 
-
       {isFocused && (
         <FlatList
           data={filteredPlaces}
           keyExtractor={(item) => item.miejsce_id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
-            onPress={() => {
-              handlePress({
-                latitude: parseFloat(item.latitude),
-                longitude: parseFloat(item.longitude),
-              });
-            }}
+              onPress={() => {
+                handlePress({
+                  latitude: parseFloat(item.latitude),
+                  longitude: parseFloat(item.longitude),
+                });
+              }}
               style={{
                 flexDirection: "row",
                 padding: 10,
@@ -125,15 +118,13 @@ const GoogleTextInput = ({
                 <Text style={{ fontWeight: "bold", fontSize: 16 }}>
                   {item.nazwa}
                 </Text>
-                <Text style={{ fontSize: 12, color: "#666" }}>
-                  {item.opis}
-                </Text>
+                <Text style={{ fontSize: 12, color: "#666" }}>{item.opis}</Text>
               </View>
             </TouchableOpacity>
           )}
           ListEmptyComponent={() => (
             <Text style={{ textAlign: "center", padding: 20, color: "#666" }}>
-              No results found
+              Brak wyników
             </Text>
           )}
           style={{

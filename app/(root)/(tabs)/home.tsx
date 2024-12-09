@@ -4,7 +4,7 @@ import * as Location from "expo-location";
 import MiejsceCard from "@/components/MiejsceCard";
 import { icons, zdjecia } from "@/constants";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,18 +16,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocationStore, useMiejsceStore } from "@/store";
+import { StyleSheet } from "react-native";
 
 const Home = () => {
   const { user } = useUser();
   const { ciekaweMiejsca, loading, error, fetchMiejsca } = useMiejsceStore();
-  const { setUserLocation, setDestinationLocation } = useLocationStore();
+  const { setUserLocation } = useLocationStore();
   const [hasPermission, setHasPermission] = useState(false);
+  const mapRef = useRef<MapaRef>(null);
 
   useEffect(() => {
     if (!ciekaweMiejsca) {
       fetchMiejsca();
     }
   }, [ciekaweMiejsca, fetchMiejsca]);
+
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -38,18 +41,21 @@ const Home = () => {
 
         if (status !== "granted") {
           setHasPermission(false);
-          Alert.alert(
-            "Location Permission Required",
-            "Please enable location permissions in your device settings."
-          );
           return;
         }
+        const currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        setUserLocation({
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+        });
 
         subscription = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.High,
-            timeInterval: 5000, // Update every 5 seconds
-            distanceInterval: 10, // Update every 10 meters
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 1000,
+            distanceInterval: 50,
           },
           async (location) => {
             try {
@@ -68,7 +74,7 @@ const Home = () => {
           }
         );
       } catch (error) {
-        console.error("Error in location tracking:", error.message);
+        console.error("Error in location tracking:", error);
         Alert.alert("Error", "Unable to fetch location. Please try again.");
       }
     };
@@ -91,6 +97,29 @@ const Home = () => {
       </SafeAreaView>
     );
   }
+  const handleCardPress = (latitude: number, longitude: number) => {
+    if (mapRef.current) {
+      mapRef.current.zoomToPlace(latitude, longitude);
+    }
+  };
+  const handlePlacePress = (coordinates: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    if (mapRef.current) {
+      mapRef.current.zoomToPlace(coordinates.latitude, coordinates.longitude);
+    }
+  };
+  const styles = StyleSheet.create({
+    containerStyle: {
+      backgroundColor: "white",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 1.41,
+      elevation: 2, // For Android shadow
+    },
+  });
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
       <FlatList
@@ -98,7 +127,18 @@ const Home = () => {
         keyExtractor={(item) =>
           item.miejsce_id?.toString() || `key-${Math.random()}`
         }
-        renderItem={({ item }) => <MiejsceCard miejsce={item} />}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() =>
+              handleCardPress(
+                parseFloat(item.latitude),
+                parseFloat(item.longitude)
+              )
+            }
+          >
+            <MiejsceCard miejsce={item} />
+          </TouchableOpacity>
+        )}
         className="px-5"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -136,7 +176,8 @@ const Home = () => {
             </View>
             <GoogleTextInput
               icon={icons.search}
-              containerStyle="bg-white shadow-md shadow-neutral-300"
+              handlePress={handlePlacePress}
+              containerStyle={styles.containerStyle} // Pass the style object
               ciekaweMiejsca={ciekaweMiejsca} // Pass the places as a prop
               error={error} // Pass the error state
             />
@@ -145,7 +186,7 @@ const Home = () => {
                 Twoja lokalizacja
               </Text>
               <View className="flex flex-row items-center bg-transparent h-[300px]">
-                <Mapa />
+                <Mapa ref={mapRef} />
               </View>
             </>
             <Text className="text-xl font-JakartaBold mt-5 mb-3">
