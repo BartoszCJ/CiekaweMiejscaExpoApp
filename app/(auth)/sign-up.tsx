@@ -14,9 +14,7 @@ import { fetchAPI } from "@/lib/fetch";
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
-
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -80,7 +78,6 @@ const SignUp = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView>
-        {/* Header Section */}
         <View className="relative w-full h-[250px]">
           {/* Obraz */}
           <Image
@@ -93,8 +90,6 @@ const SignUp = () => {
             Stwórz swoje konto
           </Text>
         </View>
-
-        {/* Form Section */}
         <View className="p-5">
           <InputField
             label="Imie"

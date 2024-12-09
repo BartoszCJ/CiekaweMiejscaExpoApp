@@ -1,13 +1,11 @@
 import { create } from "zustand";
-
-import { ApiResponse, LocationStore, MarkerData, Miejsce } from "@/types/type";
+import { LocationStore, Miejsce } from "@/types/type";
 
 export const useLocationStore = create<LocationStore>((set) => ({
   userLatitude: null,
   userLongitude: null,
   destinationLatitude: null,
   destinationLongitude: null,
-  destinationAddress: null,
   selectedLocation: null,
   setUserLocation: ({
     latitude,
@@ -16,7 +14,6 @@ export const useLocationStore = create<LocationStore>((set) => ({
     latitude: number;
     longitude: number;
   }) => {
-    console.log("Updating user location:", { latitude, longitude });
     set(() => ({
       userLatitude: latitude,
       userLongitude: longitude,

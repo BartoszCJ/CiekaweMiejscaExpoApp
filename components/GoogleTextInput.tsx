@@ -6,11 +6,9 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import { icons } from "@/constants";
 import { GoogleInputProps, Miejsce } from "@/types/type";
-import { useFetch } from "@/lib/fetch";
 import { useLocationStore, useMiejsceStore } from "@/store";
 
 const GoogleTextInput = ({
@@ -93,7 +91,7 @@ const GoogleTextInput = ({
         />
       </View>
 
-      {/* Conditionally Render Filtered Results */}
+
       {isFocused && (
         <FlatList
           data={filteredPlaces}
@@ -104,7 +102,6 @@ const GoogleTextInput = ({
               handlePress({
                 latitude: parseFloat(item.latitude),
                 longitude: parseFloat(item.longitude),
-                address: item.address,
               });
             }}
               style={{

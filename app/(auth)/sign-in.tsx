@@ -6,7 +6,6 @@ import InputField from "@/components/InputField";
 import CustomButton from "@/components/CustomButton";
 import { Link, useRouter } from "expo-router";
 import OAuth from "@/components/OAuth";
-import { router } from "expo-router";
 import { useSignIn } from "@clerk/clerk-expo";
 
 const SignIn = () => {
@@ -45,7 +44,6 @@ const SignIn = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView>
-        {/* Header Section */}
         <View className="relative w-full h-[250px]">
           <Image
             source={zdjecia.rejestracja}
@@ -55,8 +53,6 @@ const SignIn = () => {
             Zaloguj się
           </Text>
         </View>
-
-        {/* Form Section */}
         <View className="p-5">
           <InputField
             label="Email"

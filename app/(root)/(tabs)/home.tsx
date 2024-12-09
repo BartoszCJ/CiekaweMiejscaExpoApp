@@ -1,10 +1,9 @@
 import GoogleTextInput from "@/components/GoogleTextInput";
 import Mapa from "@/components/Mapa";
 import * as Location from "expo-location";
-import RideCard from "@/components/RideCard";
+import MiejsceCard from "@/components/MiejsceCard";
 import { icons, zdjecia } from "@/constants";
 import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -17,8 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocationStore, useMiejsceStore } from "@/store";
-import { useFetch } from "@/lib/fetch";
-import { Miejsce } from "@/types/type";
 
 const Home = () => {
   const { user } = useUser();
@@ -76,7 +73,6 @@ const Home = () => {
       }
     };
 
-    
     startLocationTracking();
 
     return () => {
@@ -85,7 +81,7 @@ const Home = () => {
       }
     };
   }, []);
-  
+
   if (loading || !ciekaweMiejsca) {
     return (
       <SafeAreaView
@@ -102,7 +98,7 @@ const Home = () => {
         keyExtractor={(item) =>
           item.miejsce_id?.toString() || `key-${Math.random()}`
         }
-        renderItem={({ item }) => <RideCard miejsce={item} />}
+        renderItem={({ item }) => <MiejsceCard miejsce={item} />}
         className="px-5"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: 100 }}

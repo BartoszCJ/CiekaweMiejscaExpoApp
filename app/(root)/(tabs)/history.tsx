@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Hisory = () => {
   return (
     <SafeAreaView>
-      <Text>historia</Text>
+      <Text>Historia odwiedzonych miejsc</Text>
     </SafeAreaView>
   );
 };

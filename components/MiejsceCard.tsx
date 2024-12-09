@@ -2,7 +2,7 @@ import { Image, Text, View } from "react-native";
 import { icons } from "@/constants";
 import { Miejsce } from "@/types/type";
 
-const RideCard = ({ miejsce }: { miejsce: Miejsce }) => {
+const MiejsceCard = ({ miejsce }: { miejsce: Miejsce }) => {
   return (
     <View className="flex flex-row items-center justify-center bg-white rounded-lg shadow-sm shadow-neutral-300 mb-3">
       <View className="flex flex-col items-start justify-center p-3">
@@ -70,4 +70,4 @@ const RideCard = ({ miejsce }: { miejsce: Miejsce }) => {
   );
 };
 
-export default RideCard;
+export default MiejsceCard;

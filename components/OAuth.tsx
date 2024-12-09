@@ -16,11 +16,10 @@ const OAuth = () => {
     <View>
       <View className="flex flex-row justify-center items-center mt-4 gap-x-3">
         <View className="flex-1 h-[1px] bg-general-100" />
-        <Text className="text-lg text-neutral-500">Or</Text>
+        <Text className="text-lg text-neutral-500">Lub</Text>
         <View className="flex-1 h-[1px] bg-general-100" />
       </View>
 
-      {/* Przycisk logowania  Google */}
       <CustomButton
         title="Zaloguj się kontem Google"
         className="mt-5 w-full shadow-none"

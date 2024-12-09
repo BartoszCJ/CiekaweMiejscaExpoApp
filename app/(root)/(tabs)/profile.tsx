@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Profile = () => {
   return (
     <SafeAreaView>
-      <Text>Home</Text>
+      <Text>Twój profil</Text>
     </SafeAreaView>
   );
 };

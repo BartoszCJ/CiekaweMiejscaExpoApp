@@ -11,14 +11,14 @@ const Mapa = () => {
     error,
     fetchMiejsca,
   } = useMiejsceStore();
+
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
 
   useEffect(() => {
     console.log("Location updated:", { userLatitude, userLongitude });
   }, [userLatitude, userLongitude]);
  
-     
-  
+    
   useEffect(() => {
     if (!ciekaweMiejsca) {
       fetchMiejsca();
@@ -62,7 +62,7 @@ const Mapa = () => {
       showsUserLocation={true}
       userInterfaceStyle="light"
     >
-      {/* Add markers for places */}
+
       {ciekaweMiejsca.map((miejsce) => (
         <Marker
           key={miejsce.miejsce_id}
