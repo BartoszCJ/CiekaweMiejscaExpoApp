@@ -11,6 +11,7 @@ import {
 import { icons } from "@/constants";
 import { GoogleInputProps, Miejsce } from "@/types/type";
 import { useFetch } from "@/lib/fetch";
+import { useLocationStore, useMiejsceStore } from "@/store";
 
 const GoogleTextInput = ({
   icon,
@@ -21,10 +22,19 @@ const GoogleTextInput = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPlaces, setFilteredPlaces] = useState<Miejsce[]>([]);
   const [isFocused, setIsFocused] = useState(false);
+  const {
+    ciekaweMiejsca,
+    loading: placesLoading,
+    error,
+    fetchMiejsca,
+  } = useMiejsceStore();
+  // Fetch places if not already loaded
+  useEffect(() => {
+    if (!ciekaweMiejsca) {
+      fetchMiejsca();
+    }
+  }, [ciekaweMiejsca, fetchMiejsca]);
 
-  const { data: ciekaweMiejsca, loading, error } = useFetch<Miejsce[]>(
-    "/(api)/miejsce/miejsce"
-  );
 
   // Update filtered places when search query or fetched data changes
   useEffect(() => {
@@ -39,13 +49,7 @@ const GoogleTextInput = ({
     }
   }, [searchQuery, ciekaweMiejsca]);
 
-  if (loading) {
-    return (
-      <View style={{ justifyContent: "center", alignItems: "center", flex: 1 }}>
-        <ActivityIndicator size="large" color="#000" />
-      </View>
-    );
-  }
+
 
   if (error) {
     return (
@@ -56,6 +60,7 @@ const GoogleTextInput = ({
       </View>
     );
   }
+
 
   return (
     <View
@@ -95,14 +100,13 @@ const GoogleTextInput = ({
           keyExtractor={(item) => item.miejsce_id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() => {
-                setIsFocused(false); // Hide list on selection
-                handlePress({
-                  latitude: parseFloat(item.latitude),
-                  longitude: parseFloat(item.longitude),
-                  address: item.address,
-                });
-              }}
+            onPress={() => {
+              handlePress({
+                latitude: parseFloat(item.latitude),
+                longitude: parseFloat(item.longitude),
+                address: item.address,
+              });
+            }}
               style={{
                 flexDirection: "row",
                 padding: 10,

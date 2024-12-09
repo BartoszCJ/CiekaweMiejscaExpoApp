@@ -1,5 +1,5 @@
 import GoogleTextInput from "@/components/GoogleTextInput";
-import Mapa from "@/components/Map";
+import Mapa from "@/components/Mapa";
 import * as Location from "expo-location";
 import RideCard from "@/components/RideCard";
 import { icons, zdjecia } from "@/constants";
@@ -8,6 +8,7 @@ import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Text,
@@ -15,53 +16,68 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocationStore } from "@/store";
+import { useLocationStore, useMiejsceStore } from "@/store";
 import { useFetch } from "@/lib/fetch";
 import { Miejsce } from "@/types/type";
 
 const Home = () => {
   const { user } = useUser();
-  const handleSignOut = () => {};
-  const handleDestinationPress = () => {};
+  const { ciekaweMiejsca, loading, error, fetchMiejsca } = useMiejsceStore();
   const { setUserLocation, setDestinationLocation } = useLocationStore();
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
+  const [hasPermission, setHasPermission] = useState(false);
 
-  const {
-    data: ciekaweMiejsca,
-    loading,
-    error,
-  } = useFetch<Miejsce[]>("/(api)/miejsce/miejsce");
-
+  useEffect(() => {
+    if (!ciekaweMiejsca) {
+      fetchMiejsca();
+    }
+  }, [ciekaweMiejsca, fetchMiejsca]);
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setHasPermission(false);
-        return;
-      }
+    const startLocationTracking = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        console.log("Location permission status:", status);
 
-      subscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 5000, // Update every 5 seconds
-          distanceInterval: 10, // Update when user moves 10 meters
-        },
-        async (location) => {
-          const address = await Location.reverseGeocodeAsync({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-
-          setUserLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            address: `${address[0]?.name || "Unknown"}, ${address[0]?.region || "Unknown"}`,
-          });
+        if (status !== "granted") {
+          setHasPermission(false);
+          Alert.alert(
+            "Location Permission Required",
+            "Please enable location permissions in your device settings."
+          );
+          return;
         }
-      );
-    })();
+
+        subscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 5000, // Update every 5 seconds
+            distanceInterval: 10, // Update every 10 meters
+          },
+          async (location) => {
+            try {
+              const address = await Location.reverseGeocodeAsync({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }).catch(() => [{ name: "Unknown", region: "Unknown" }]);
+
+              setUserLocation({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              });
+            } catch (error) {
+              console.error("Reverse geocoding error:", error);
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Error in location tracking:", error.message);
+        Alert.alert("Error", "Unable to fetch location. Please try again.");
+      }
+    };
+
+    
+    startLocationTracking();
 
     return () => {
       if (subscription) {
@@ -70,16 +86,26 @@ const Home = () => {
     };
   }, []);
   
+  if (loading || !ciekaweMiejsca) {
+    return (
+      <SafeAreaView
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color="#0000ff" />
+      </SafeAreaView>
+    );
+  }
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
       <FlatList
-        data={ciekaweMiejsca?.slice(0, 5)} // Przekazanie płaskiej tablicy
-        keyExtractor={(item) => item.miejsce_id?.toString() || "default_key"}
-        // Ustawienie unikalnego klucza
+        data={ciekaweMiejsca || []}
+        keyExtractor={(item) =>
+          item.miejsce_id?.toString() || `key-${Math.random()}`
+        }
         renderItem={({ item }) => <RideCard miejsce={item} />}
         className="px-5"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 100 }} // Renderowanie każdego elementu
+        contentContainerStyle={{ paddingBottom: 100 }}
         ListEmptyComponent={() => (
           <View className="flex flex-col items-center justify-center">
             {!loading ? (
@@ -89,11 +115,11 @@ const Home = () => {
                   className="w-40 h-40"
                   alt="Brak rides"
                   resizeMode="contain"
-                ></Image>
+                />
                 <Text className="text-sm">Brak rides</Text>
               </>
             ) : (
-              <ActivityIndicator size="small" color="#000"></ActivityIndicator>
+              <ActivityIndicator size="small" color="#000" />
             )}
           </View>
         )}
@@ -101,12 +127,12 @@ const Home = () => {
           <>
             <View className="flex flex-row items center justify-between my-5">
               <Text className="text-2xl font-JakartaExtraBold capitalize">
-                Witam
+                Witam{" "}
                 {user?.firstName ||
-                  user?.emailAddresses[0].emailAddress.split("@")[0]}{" "}
+                  user?.emailAddresses[0]?.emailAddress.split("@")[0]}
               </Text>
               <TouchableOpacity
-                onPress={handleSignOut}
+                onPress={() => {}}
                 className="justify-center items-center w-10 h-10 rounded-full bg-white"
               >
                 <Image source={icons.out} className="w-4 h-4" />
@@ -115,9 +141,9 @@ const Home = () => {
             <GoogleTextInput
               icon={icons.search}
               containerStyle="bg-white shadow-md shadow-neutral-300"
-              handlePress={handleDestinationPress}
+              ciekaweMiejsca={ciekaweMiejsca} // Pass the places as a prop
+              error={error} // Pass the error state
             />
-
             <>
               <Text className="text-xl font-JakartaBold mt-5 mb-3">
                 Twoja lokalizacja
@@ -126,7 +152,6 @@ const Home = () => {
                 <Mapa />
               </View>
             </>
-
             <Text className="text-xl font-JakartaBold mt-5 mb-3">
               Ciekawe miejsca
             </Text>

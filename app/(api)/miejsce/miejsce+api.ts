@@ -5,7 +5,6 @@ export async function GET(request: Request) {
     const sql = neon(`${process.env.DATABASE_URL}`);
     console.log("Executing SQL query...");
     const response = await sql`SELECT * FROM miejsca`;
-    console.log("Query Result:", response);
 
     const formattedResponse = response.map((row) => ({
       miejsce_id: row.miejsce_id,

@@ -1,60 +1,64 @@
 import { create } from "zustand";
 
-import { DriverStore, LocationStore, MarkerData } from "@/types/type";
+import { ApiResponse, LocationStore, MarkerData, Miejsce } from "@/types/type";
 
 export const useLocationStore = create<LocationStore>((set) => ({
   userLatitude: null,
   userLongitude: null,
-  userAddress: null,
   destinationLatitude: null,
   destinationLongitude: null,
   destinationAddress: null,
+  selectedLocation: null,
   setUserLocation: ({
     latitude,
     longitude,
-    address,
   }: {
     latitude: number;
     longitude: number;
-    address: string;
   }) => {
+    console.log("Updating user location:", { latitude, longitude });
     set(() => ({
       userLatitude: latitude,
       userLongitude: longitude,
-      userAddress: address,
     }));
-
-    // if driver is selected and now new location is set, clear the selected driver
-    const { selectedDriver, clearSelectedDriver } = useDriverStore.getState();
-    if (selectedDriver) clearSelectedDriver();
   },
-
+ 
   setDestinationLocation: ({
     latitude,
     longitude,
-    address,
+  
   }: {
     latitude: number;
     longitude: number;
-    address: string;
+
   }) => {
     set(() => ({
       destinationLatitude: latitude,
       destinationLongitude: longitude,
-      destinationAddress: address,
     }));
-
-    // if driver is selected and now new location is set, clear the selected driver
-    const { selectedDriver, clearSelectedDriver } = useDriverStore.getState();
-    if (selectedDriver) clearSelectedDriver();
   },
 }));
 
-export const useDriverStore = create<DriverStore>((set) => ({
-  drivers: [] as MarkerData[],
-  selectedDriver: null,
-  setSelectedDriver: (driverId: number) =>
-    set(() => ({ selectedDriver: driverId })),
-  setDrivers: (drivers: MarkerData[]) => set(() => ({ drivers })),
-  clearSelectedDriver: () => set(() => ({ selectedDriver: null })),
+interface MiejsceStore {
+  ciekaweMiejsca: Miejsce[] | null;
+  loading: boolean;
+  error: Error | null;
+  fetchMiejsca: () => void;
+}
+
+export const useMiejsceStore = create<MiejsceStore>((set) => ({
+  ciekaweMiejsca: null,
+  loading: false,
+  error: null,
+  fetchMiejsca: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await fetch("/(api)/miejsce/miejsce");
+      const json = await response.json();
+      set({ ciekaweMiejsca: json.data || [], loading: false });
+    } catch (err) {
+      console.error("Error fetching miejsca:", err);
+      set({ error: err as Error, loading: false });
+    }
+  },
 }));
